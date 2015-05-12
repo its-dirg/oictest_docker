@@ -6,7 +6,7 @@
 #
 
 # Name of config file
-conf=config.py
+conf=config_server/config.py
 
 # Image name
 image=itsdirg/oictest
@@ -17,13 +17,18 @@ name=oictest
 # relative path to volume
 volume=etc
 
+
+c_path=$(pwd)
+cddir=$(dirname `which $0`)
+cd $cddir
+
 dir=$(pwd)
 
 docker_ports=""
 
 checkPort() {
 
-    for p in {${1}..${2}}
+    for (( p=${1}; p<=${2}; p++))
     do
         port_check=$(netstat -an | grep ${p} | wc -l)
         port_b2d=$(VBoxManage showvminfo "boot2docker-vm" --details | grep ${p} | wc -l)
@@ -42,17 +47,17 @@ checkPort() {
 }
 
 openPort() {
-    for p in {${1}..${2}}
+    for (( p=${1}; p<=${2}; p++))
     do
         VBoxManage controlvm "boot2docker-vm" natpf1 "${name}_${3}_${p},tcp,127.0.0.1,${p},,${p}"
-        docker_ports=${docker_ports} $(-p ${p}:${p})
+        docker_ports="${docker_ports} -p ${p}:${p}"
     done
 
 }
 
 closePort() {
 
-    for p in {${1}..${2}}
+    for (( p=${1}; p<=${2}; p++))
     do
         VBoxManage controlvm "boot2docker-vm" natpf1 delete "${name}_${3}_${p}"
     done
@@ -62,11 +67,10 @@ closePort() {
 
 HOST_PORT=$(cat ${volume}/${conf} | grep PORT | head -1 | sed 's/[^0-9]//g')
 
-DYN_PORT_RANGE_MIN=$(cat ${volume}/${conf} | grep DYNAMIC_CLIENT_REGISTRATION_PORT_RANGE_MIN | head -1 | sed 's/[^0-9]//g')
-DYN_PORT_RANGE_MAX=$(cat ${volume}/${conf} | grep DYNAMIC_CLIENT_REGISTRATION_PORT_RANGE_MAX | head -1 | sed 's/[^0-9]//g')
-STATIC_PORT_RANGE_MIN=$(cat ${volume}/${conf} | grep STATIC_CLIENT_REGISTRATION_PORT_RANGE_MIN | head -1 | sed 's/[^0-9]//g')
-STATIC_PORT_RANGE_MAX=$(cat ${volume}/${conf} | grep STATIC_CLIENT_REGISTRATION_PORT_RANGE_MAX | head -1 | sed 's/[^0-9]//g')
-
+DYN_PORT_RANGE_MIN=$(cat ${volume}/${conf} | grep DYNAMIC_CLIENT_REGISTRATION_PORT_RANGE_MIN | grep -v "#" | head -1 | sed 's/[^0-9]//g')
+DYN_PORT_RANGE_MAX=$(cat ${volume}/${conf} | grep DYNAMIC_CLIENT_REGISTRATION_PORT_RANGE_MAX | grep -v "#" | head -1 | sed 's/[^0-9]//g')
+STATIC_PORT_RANGE_MIN=$(cat ${volume}/${conf} | grep STATIC_CLIENT_REGISTRATION_PORT_RANGE_MIN | grep -v "#" | head -1 | sed 's/[^0-9]//g')
+STATIC_PORT_RANGE_MAX=$(cat ${volume}/${conf} | grep STATIC_CLIENT_REGISTRATION_PORT_RANGE_MAX | grep -v "#" | head -1 | sed 's/[^0-9]//g')
 
 centos_or_redhat=$(cat /etc/centos-release 2>/dev/null | wc -l)
 
@@ -109,9 +113,6 @@ if ${sudo} docker ps | awk '{print $NF}' | grep -qx ${name}; then
 fi
 $sudo docker rm ${name} > /dev/null 2> /dev/null
 
-#mkdir ./etc/logs > /dev/null 2> /dev/null
-#mkdir ./etc/db > /dev/null 2> /dev/null
-
 ${sudo} docker run --rm=true \
     --name ${name} \
     --hostname localhost \
@@ -123,7 +124,9 @@ ${sudo} docker run --rm=true \
 
 # delete port forwarding
 if [ $(uname) = "Darwin" ] && [ ${port_b2d} = 1 ]; then
+    closePort $HOST_PORT $HOST_PORT "HOST_PORT"
     closePort $DYN_PORT_RANGE_MIN $DYN_PORT_RANGE_MAX "DYN_PORT"
     closePort $STATIC_PORT_RANGE_MIN $STATIC_PORT_RANGE_MAX "STATIC_PORT"
-    closePort $HOST_PORT $HOST_PORT "HOST_PORT"
 fi
+
+cd $c_path
