@@ -1,0 +1,8 @@
+git+https://github.com/its-dirg/dirg-util.git#egg=dirg-util
+cherrypy
+urllib3
+pyopenssl
+ndg-httpsclient
+pyasn1
+dataset
+prettytable

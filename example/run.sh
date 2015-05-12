@@ -1,0 +1,129 @@
+#!/bin/bash
+#
+# To debug your container:
+#
+#   DOCKERARGS="--entrypoint /bin/bash" bash -x ./run.sh
+#
+
+# Name of config file
+conf=config.py
+
+# Image name
+image=itsdirg/oictest
+
+# Name of container
+name=oictest
+
+# relative path to volume
+volume=etc
+
+dir=$(pwd)
+
+docker_ports=""
+
+checkPort() {
+
+    for p in {${1}..${2}}
+    do
+        port_check=$(netstat -an | grep ${p} | wc -l)
+        port_b2d=$(VBoxManage showvminfo "boot2docker-vm" --details | grep ${p} | wc -l)
+
+        if [ ${port_b2d} = 1 ]; then
+            echo "Port: " ${p} " is already used by virtual box! Change port in the file " ${conf}
+            exit 1
+        fi
+
+        if [ ${port_check} = 1 ]; then
+            echo "Port: " ${p} " is already used! Change port in the file " ${conf}
+            exit 1
+        fi
+    done
+
+}
+
+openPort() {
+    for p in {${1}..${2}}
+    do
+        VBoxManage controlvm "boot2docker-vm" natpf1 "${name}_${3}_${p},tcp,127.0.0.1,${p},,${p}"
+        docker_ports=${docker_ports} $(-p ${p}:${p})
+    done
+
+}
+
+closePort() {
+
+    for p in {${1}..${2}}
+    do
+        VBoxManage controlvm "boot2docker-vm" natpf1 delete "${name}_${3}_${p}"
+    done
+
+}
+
+
+HOST_PORT=$(cat ${volume}/${conf} | grep PORT | head -1 | sed 's/[^0-9]//g')
+
+DYN_PORT_RANGE_MIN=$(cat ${volume}/${conf} | grep DYNAMIC_CLIENT_REGISTRATION_PORT_RANGE_MIN | head -1 | sed 's/[^0-9]//g')
+DYN_PORT_RANGE_MAX=$(cat ${volume}/${conf} | grep DYNAMIC_CLIENT_REGISTRATION_PORT_RANGE_MAX | head -1 | sed 's/[^0-9]//g')
+STATIC_PORT_RANGE_MIN=$(cat ${volume}/${conf} | grep STATIC_CLIENT_REGISTRATION_PORT_RANGE_MIN | head -1 | sed 's/[^0-9]//g')
+STATIC_PORT_RANGE_MAX=$(cat ${volume}/${conf} | grep STATIC_CLIENT_REGISTRATION_PORT_RANGE_MAX | head -1 | sed 's/[^0-9]//g')
+
+
+centos_or_redhat=$(cat /etc/centos-release 2>/dev/null | wc -l)
+
+DOCKERARGS=${DOCKERARGS}" -e BUILD_CONF=1 -e BUILD_METADATA=1 -e UPDATE_METADATA=1"
+
+if [ ${centos_or_redhat} = 1 ]; then
+    $(chcon -Rt svirt_sandbox_file_t ${dir}/${volume})
+fi
+
+# Check if running on mac
+if [ $(uname) = "Darwin" ]; then
+
+    checkPort $DYN_PORT_RANGE_MIN $DYN_PORT_RANGE_MAX
+    checkPort $STATIC_PORT_RANGE_MIN $STATIC_PORT_RANGE_MAX
+    checkPort $HOST_PORT $HOST_PORT
+
+    openPort $DYN_PORT_RANGE_MIN $DYN_PORT_RANGE_MAX "DYN_PORT"
+    openPort $STATIC_PORT_RANGE_MIN $STATIC_PORT_RANGE_MAX "STATIC_PORT"
+    openPort $HOST_PORT $HOST_PORT "HOST_PORT"
+    port_b2d=1
+
+    # Check so the boot2docker vm is running
+    if [ $(boot2docker status) != "running" ]; then
+        boot2docker start
+    fi
+    $(boot2docker shellinit)
+else
+
+    docker_ports=$(-p ${HOST_PORT}:${HOST_PORT})
+    # if running on linux
+    if [ $(id -u) -ne 0 ] && [ $(grep docker /etc/group | grep $USER | wc -l) = 0 ]; then
+        sudo="sudo"
+    fi
+fi
+
+if ${sudo} docker ps | awk '{print $NF}' | grep -qx ${name}; then
+    echo "$0: Docker container with name $name already running. Press enter to restart it, or ctrl+c to abort."
+    read foo
+    ${sudo} docker kill ${name}
+fi
+$sudo docker rm ${name} > /dev/null 2> /dev/null
+
+#mkdir ./etc/logs > /dev/null 2> /dev/null
+#mkdir ./etc/db > /dev/null 2> /dev/null
+
+${sudo} docker run --rm=true \
+    --name ${name} \
+    --hostname localhost \
+    -v ${dir}/${volume}:/opt/oictest/etc \
+    ${docker_ports} \
+    $DOCKERARGS \
+    -i -t \
+    ${image}
+
+# delete port forwarding
+if [ $(uname) = "Darwin" ] && [ ${port_b2d} = 1 ]; then
+    closePort $DYN_PORT_RANGE_MIN $DYN_PORT_RANGE_MAX "DYN_PORT"
+    closePort $STATIC_PORT_RANGE_MIN $STATIC_PORT_RANGE_MAX "STATIC_PORT"
+    closePort $HOST_PORT $HOST_PORT "HOST_PORT"
+fi
