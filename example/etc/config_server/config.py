@@ -14,8 +14,8 @@ else:
     BASE = "http://%s:%d/" % (HOST, PORT)
 
 # If BASE is https these has to be specified
-SERVER_CERT = "certs/server.crt"
-SERVER_KEY = "certs/server.key"
+SERVER_CERT = "certificates/server.crt"
+SERVER_KEY = "certificates/server.key"
 CA_BUNDLE = None
 
 STATIC_CLIENT_REGISTRATION_PORTS_DATABASE_FILE = "./static_ports.db"
