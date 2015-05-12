@@ -1,5 +1,7 @@
 #!/bin/bash
 
+dir=$(dirname `which $0`)
+
 repository="itsdirg/oictest"
 
 # Check if running on mac
@@ -19,5 +21,6 @@ else
         sudo="sudo"
     fi
 fi
+
 ${sudo} docker rmi -f ${repository}
-${sudo} docker build --no-cache -t=${repository} .
+${sudo} docker build --no-cache -t=${repository} ${dir}
