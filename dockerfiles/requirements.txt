@@ -6,3 +6,5 @@ ndg-httpsclient
 pyasn1
 dataset
 prettytable
+mechanize
+beautifulsoup4
