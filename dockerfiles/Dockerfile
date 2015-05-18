@@ -5,6 +5,7 @@ MAINTAINER DIRG <dirg@its.umu.se>
 VOLUME ["/opt/oictest/etc"]
 
 RUN mkdir /opt/oictest/src
+RUN mkdir /opt/oictest/example
 
 ADD requirements.txt /opt/oictest/requirements.txt
 
@@ -28,7 +29,10 @@ RUN git clone https://github.com/rohe/oictest /opt/oictest/src/oictest
 RUN pip install -e /opt/oictest/src/oictest
 
 ADD start.sh /start.sh
+ADD example /opt/oictest/example
 
 WORKDIR /
+
+EXPOSE 8000
 
 CMD ["bash", "/start.sh"]

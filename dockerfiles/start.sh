@@ -2,6 +2,14 @@
 
 volumePath=/opt/oictest/etc/
 
+# if volume is empty, use the example files
+if ! [ "$(ls -A ${volumePath})" ]; then
+    echo "Using example files"
+    volumePath=/opt/oictest/example/
+else
+    echo "Using volume files"
+fi
+
 linkFiles() {
 
     ALL_FILES=$(ls -1 ${volumePath}${1})
