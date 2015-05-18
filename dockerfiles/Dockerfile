@@ -34,5 +34,7 @@ ADD example /opt/oictest/example
 WORKDIR /
 
 EXPOSE 8000
+EXPOSE 8001-8010
+EXPOSE 8501-8510
 
 CMD ["bash", "/start.sh"]

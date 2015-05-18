@@ -72,6 +72,14 @@ DYN_PORT_RANGE_MAX=$(cat ${volume}/${conf} | grep DYNAMIC_CLIENT_REGISTRATION_PO
 STATIC_PORT_RANGE_MIN=$(cat ${volume}/${conf} | grep STATIC_CLIENT_REGISTRATION_PORT_RANGE_MIN | grep -v "#" | head -1 | sed 's/[^0-9]//g')
 STATIC_PORT_RANGE_MAX=$(cat ${volume}/${conf} | grep STATIC_CLIENT_REGISTRATION_PORT_RANGE_MAX | grep -v "#" | head -1 | sed 's/[^0-9]//g')
 
+if ! [ $HOST_PORT ]; then
+    HOST_PORT=8000
+    DYN_PORT_RANGE_MIN=8001
+    DYN_PORT_RANGE_MAX=8010
+    STATIC_PORT_RANGE_MIN=8501
+    STATIC_PORT_RANGE_MAX=8510
+fi
+
 centos_or_redhat=$(cat /etc/centos-release 2>/dev/null | wc -l)
 
 DOCKERARGS=${DOCKERARGS}" -e BUILD_CONF=1 -e BUILD_METADATA=1 -e UPDATE_METADATA=1"
