@@ -24,6 +24,18 @@ linkFiles() {
 
 }
 
+overWriteHOST() {
+
+    filePath=${volumePath}${1}
+    lineNumber=$(grep -in "^HOST[ =]" ${filePath} | awk -F: '{print $1}')
+    string="${lineNumber}s/.*/HOST=\"${2}\"/"
+    sed -i ${string} ${filePath}
+}
+
+if [ $HOST_IP ]; then
+    overWriteHOST config_server/config.py $HOST_IP
+fi
+
 linkFiles config_server 0
 linkFiles keys 1
 linkFiles rp 0

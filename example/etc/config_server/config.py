@@ -1,4 +1,4 @@
-HOST = "localhost"
+HOST="192.168.59.103"
 PORT = 8000
 HTTPS = True
 

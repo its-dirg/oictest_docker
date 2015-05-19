@@ -91,6 +91,12 @@ fi
 # Check if running on mac
 if [ $(uname) = "Darwin" ]; then
 
+    # Check so the boot2docker vm is running
+    if [ $(boot2docker status) != "running" ]; then
+        boot2docker start
+    fi
+    $(boot2docker shellinit)
+
     checkPort $DYN_PORT_RANGE_MIN $DYN_PORT_RANGE_MAX
     checkPort $STATIC_PORT_RANGE_MIN $STATIC_PORT_RANGE_MAX
     checkPort $HOST_PORT $HOST_PORT
@@ -100,11 +106,8 @@ if [ $(uname) = "Darwin" ]; then
     openPort $HOST_PORT $HOST_PORT "HOST_PORT"
     port_b2d=1
 
-    # Check so the boot2docker vm is running
-    if [ $(boot2docker status) != "running" ]; then
-        boot2docker start
-    fi
-    $(boot2docker shellinit)
+    echo "When using boot2docker "
+    DOCKERENV="-e HOST_IP=$(boot2docker ip)"
 else
 
     docker_ports=$(-p ${HOST_PORT}:${HOST_PORT})
@@ -119,13 +122,20 @@ if ${sudo} docker ps | awk '{print $NF}' | grep -qx ${name}; then
     read foo
     ${sudo} docker kill ${name}
 fi
+
+mkdir log > /dev/null 2> /dev/null
+mkdir server_logs > /dev/null 2> /dev/null
+
 $sudo docker rm ${name} > /dev/null 2> /dev/null
 
 ${sudo} docker run --rm=true \
     --name ${name} \
     --hostname localhost \
     -v ${dir}/${volume}:/opt/oictest/etc \
+    -v ${dir}/server_logs:/opt/oictest/src/oictest/test/oic_op/rp/server_logs \
+    -v ${dir}/server_logs:/opt/oictest/src/oictest/test/oic_op/rp/log \
     ${docker_ports} \
+    ${DOCKERENV} \
     $DOCKERARGS \
     -i -t \
     ${image}
