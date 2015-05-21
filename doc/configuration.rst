@@ -48,5 +48,5 @@ This starts an oictest server with a config file **config.py**
 Log files
 =========
 
-To get log files from the container you need to volume bind both **/opt/oictest/src/oictest/test/oic_op/rp/server_logs**
+To get log files from the container you need to volume bind both **/opt/oictest/src/oictest/test/oic_op/rp/server_log**
 and **/opt/oictest/src/oictest/test/oic_op/rp/log**
