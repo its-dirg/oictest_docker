@@ -40,6 +40,11 @@ linkFiles config_server 0
 linkFiles keys 1
 linkFiles rp 0
 
+if [ ! -d "/opt/oictest/src/oictest/test/oic_op/rp/server_log" ]; then
+    mkdir /opt/oictest/src/oictest/test/oic_op/rp/server_log
+fi
+
+
 cd /opt/oictest/src/oictest/test/oic_op/config_server/
 ./start.sh
 

@@ -132,8 +132,8 @@ ${sudo} docker run --rm=true \
     --name ${name} \
     --hostname localhost \
     -v ${dir}/${volume}:/opt/oictest/etc \
-    -v ${dir}/server_logs:/opt/oictest/src/oictest/test/oic_op/rp/server_logs \
-    -v ${dir}/server_logs:/opt/oictest/src/oictest/test/oic_op/rp/log \
+    -v ${dir}/server_logs:/opt/oictest/src/oictest/test/oic_op/rp/server_log \
+    -v ${dir}/log:/opt/oictest/src/oictest/test/oic_op/rp/log \
     ${docker_ports} \
     ${DOCKERENV} \
     $DOCKERARGS \
