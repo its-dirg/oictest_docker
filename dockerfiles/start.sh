@@ -24,6 +24,20 @@ linkFiles() {
 
 }
 
+copyFiles() {
+
+    ALL_FILES=$(ls -1 ${volumePath}${1})
+
+    for file in ${ALL_FILES}
+    do
+        if [ ${2} ]; then
+            rm -fr /opt/oictest/src/oictest/test/oic_op/${1}/${file} > /dev/null 2> /dev/null
+        fi
+        cp -fr ${volumePath}${1}/${file} /opt/oictest/src/oictest/test/oic_op/${1}/${file}
+    done
+
+}
+
 overWriteHOST() {
 
     filePath=${volumePath}${1}
