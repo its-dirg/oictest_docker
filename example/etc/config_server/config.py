@@ -18,7 +18,7 @@ SERVER_CERT = "certificates/server.crt"
 SERVER_KEY = "certificates/server.key"
 CA_BUNDLE = None
 
-STATIC_CLIENT_REGISTRATION_PORTS_DATABASE_FILE = "./static_ports.db"
+PORT_DATABASE_FILE = "./static_ports.db"
 
 OPRP_SSL_MODULE = "sslconf"
 
