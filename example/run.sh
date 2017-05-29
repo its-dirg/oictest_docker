@@ -110,7 +110,7 @@ if [ $(uname) = "Darwin" ]; then
     DOCKERENV="-e HOST_IP=$(boot2docker ip)"
 else
 
-    docker_ports=$(-p ${HOST_PORT}:${HOST_PORT})
+    docker_ports="-p ${HOST_PORT}:${HOST_PORT}"
     # if running on linux
     if [ $(id -u) -ne 0 ] && [ $(grep docker /etc/group | grep $USER | wc -l) = 0 ]; then
         sudo="sudo"
